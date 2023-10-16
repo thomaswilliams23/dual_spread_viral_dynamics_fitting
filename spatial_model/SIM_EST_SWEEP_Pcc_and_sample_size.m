@@ -162,7 +162,7 @@ for Pcc_ind = 1:length(Pcc_sweep)
 
                 %extract one time point for the fluorescent cell and
                 %clustering measures
-                obs_clustering_data(time_point) = true_output_point.purity_data(time_point);
+                obs_clustering_data(time_point) = true_output_point.clustering_data(time_point);
                 obs_cumul_inf_data(time_point) = (1-moi)*true_output_point.prop_infected(indices_of_obs_times(time_point));
 
 
@@ -173,7 +173,7 @@ for Pcc_ind = 1:length(Pcc_sweep)
                 peak_estimates(time_point) = sim_times(max_ind);
 
                 %any errors in computing clustering metrics
-                errs_encountered(time_point) = true_output_point.tot_purity_errs;
+                errs_encountered(time_point) = true_output_point.tot_clustering_errs;
             end
 
             %displays if errors encountered in computing the clustering metric
