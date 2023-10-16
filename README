@@ -1,3 +1,5 @@
 Code for Williams et al. "Spatial information allows inference of the prevalence of direct cell-to-cell viral infection"
 
+This directory is structured as follows. We divide the code into two main folders, corresponding to the ODE model and the spatial model. Within these folders, the files prefaced by SIM_EST_SWEEP carry out a sweep of simulation estimations on the relevant model, replicating the experiments described in the manuscript.
+We also include in the folders prefaced by SIM_DATA_from_ms the data - obtained from our own simulations of the models - used to generate the figures in the manuscript. These figures can be generated using the files in the make_plots folders. NOTE: data in SIM_DATA_from_ms folders will need to be unzipped before use.
 
