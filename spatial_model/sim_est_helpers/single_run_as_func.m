@@ -192,8 +192,8 @@ function [sim_out] = single_run_as_func(out_times, params)
                     abs(t - clustering_calc_times(curr_clustering_output_ind))<0.5*dt
 
                 %compute clustering metric
-                [mean_purity, ERR_FLAG] = compute_mean_neighbour_clustering(abs(cell_grid),num_species,num_samples_for_clustering);
-                clustering_data(curr_clustering_output_ind) = mean_purity;
+                [mean_clustering, ERR_FLAG] = compute_mean_neighbour_clustering(abs(cell_grid),num_species,num_samples_for_clustering);
+                clustering_data(curr_clustering_output_ind) = mean_clustering;
                 tot_clustering_errs = tot_clustering_errs + ERR_FLAG;
                     
                 %update clustering metric output index
@@ -248,8 +248,8 @@ function [sim_out] = single_run_as_func(out_times, params)
                 abs(t - clustering_calc_times(curr_clustering_output_ind))<0.5*dt
 
             %compute clustering metric
-            [mean_purity, ERR_FLAG] = compute_mean_neighbour_purity(abs(cell_grid),num_species,num_samples_for_clustering);
-            clustering_data(curr_clustering_output_ind) = mean_purity;
+            [mean_clustering, ERR_FLAG] = compute_mean_neighbour_clustering(abs(cell_grid),num_species,num_samples_for_clustering);
+            clustering_data(curr_clustering_output_ind) = mean_clustering;
             tot_clustering_errs = tot_clustering_errs + ERR_FLAG;
         end
     end
