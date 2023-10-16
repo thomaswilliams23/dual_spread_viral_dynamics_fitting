@@ -26,8 +26,11 @@ accepted_ppc = zeros(length(sim_times),num_particles);
 
 n_particles_found = 0;
 
-
 n_params_to_fit = length(params_to_fit);
+
+
+%count simulations
+sim_count = 0;
 
 
 %while particle index less than required number of particles
@@ -37,6 +40,7 @@ while n_particles_found<num_particles
     MIN_SIMS_TO_CALL = 10;
     sims_remaining = num_particles-n_particles_found;
     sims_this_batch = max(sims_remaining,MIN_SIMS_TO_CALL);
+    sim_count = sim_count + sims_this_batch;
 
     %parfor data structures
     all_samples = zeros(n_params_to_fit,sims_this_batch);
