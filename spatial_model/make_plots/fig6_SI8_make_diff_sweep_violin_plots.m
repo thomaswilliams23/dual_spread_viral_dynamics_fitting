@@ -1,28 +1,33 @@
 
 
-%Makes Figure 7 from the manuscript (and also SI Figure 9)
+%Makes Figure 6 from the manuscript (and also SI Figure 8)
 
 
 
 %set font of plots
-set(0,'defaulttextinterpreter','latex')
-
-%add folders
-addpath helper_funcs
+set(0, 'DefaultTextInterpreter', 'latex')
 
 
-%% simulation data specs
+%% setup
 
-%make a plot for each of these Pcc values
+%paths
+addpath ../sim_est_helpers/peak_and_Pcc_lookup/
+addpath ../sim_est_helpers/
+
+
+%data structure
 Pcc_vals_to_plot = [0.1, 0.5, 0.9];
+fnames = {'Pcc_01', 'Pcc_05', 'Pcc_09'};
+diff_vals = [0.1, 1, 10, 100, Inf];
 
-%folder setup
-sample_sizes = [50, 100, 500, 1000, NaN];
-base_folder = '../SIM_DATA_from_ms/SIM_EST_SWEEP_with_clustering/';
-
+base_folder = '../SIM_DATA_from_ms/SIM_EST_SWEEP_diffusion_data/';
 template_1 = 'fits_Pcc_';
-template_2 = '_sample_';
-template_3 = '_cells';
+template_2 = '_true_diff_';
+
+
+%this is the reference case where data is generated with infinite diffusion
+ref_fit_1 = '../SIM_DATA_from_ms/SIM_EST_SWEEP_with_clustering/fits_Pcc_';
+ref_fit_2 = '_sample_all_cells';
 
 
 %dimensions
@@ -31,14 +36,9 @@ num_iters_to_plot = 4;
 tot_iters = 4;
 
 
-%formatting
-plot_font_size = 9;
-Pcc_fig_height = 1.5;
-
-
 %labels
-folder_labels = {'50', '100', '500', '1000', 'all'};
-division_labels = {'50 Cells', '100 Cells', '500 Cells', '1000 Cells', 'All Cells (2500)'};
+folder_labels = {'01', '1', '10', '100', 'Inf'};
+division_labels = {'$D=0.1$', '$D=1$', '$D=10$', '$D=100$', '$D\rightarrow\infty$'};
 plot_labels = {'Prior'};
 for i = 1:length(folder_labels)
     plot_labels{(i-1)*(num_iters_to_plot+1)+2} = 'Post. Wt. Means';
@@ -56,7 +56,7 @@ prior_plot_colour = [0, 0, 0];
 prior_interior_plot_colour = [0.4, 0.4, 0.4];
 
 Pcc_plot_colour = [0, 0.4470, 0.7410]; 
-peak_plot_colour = [49/256, 153/256, 2/256];
+peak_plot_colour = [49/256, 153/256, 2/256]; %[0.8500, 0.3250, 0.0980];
 
 Pcc_interior_plot_colour = Pcc_plot_colour*1.2;
 Pcc_interior_plot_colour(Pcc_interior_plot_colour>1)=1;
@@ -65,9 +65,13 @@ peak_interior_plot_colour = peak_plot_colour*1.2;
 peak_interior_plot_colour(peak_interior_plot_colour>1)=1;
 
 
-%% loop over Pcc values
+
+%% loop
+%loop Pcc
 for Pcc_ind = 1:length(Pcc_vals_to_plot)
+
     Pcc_to_plot = Pcc_vals_to_plot(Pcc_ind);
+    fname = fnames{Pcc_ind};
 
 
     %% load and plot priors
@@ -76,36 +80,32 @@ for Pcc_ind = 1:length(Pcc_vals_to_plot)
     load(strcat(prior_source_folder, '/Pcc_prior_samples.mat'));
     
     
-    %plot prior violin for Pcc
+    % plot prior violin
     figure((Pcc_ind-1)*2+1)
     violin(Pcc_prior_samples', 'x', [0,1], 'facecolor', prior_interior_plot_colour, ...
         'edgecolor', prior_plot_colour, 'mc', mean_colour, 'medc', med_colour);
     legend off
     hold on
     
-    %plot prior violin for tpeak
     figure((Pcc_ind-1)*2+2)
     violin(peak_prior_samples', 'x', [0,1], 'facecolor', prior_interior_plot_colour, ...
         'edgecolor', prior_plot_colour, 'mc', mean_colour, 'medc', med_colour);
     legend off
     hold on
     
-    
-    %% plot violins for estimates
 
-    %total number of objects to plot
+    
+    %% main plot code
     tot_num_obj = length(folder_labels)*(num_iters_to_plot+1)+1;
+    for folder_ind = 1:length(diff_vals)
     
-    %initialise
-    actual_Pcc = 0;
-    actual_peak = 0;
-    
-    %loop over sample sizes
-    for folder_ind = 1:length(sample_sizes)
-    
-        %find relevant folder
-        source_folder = strcat(base_folder, '/', template_1, num2str(Pcc_to_plot), ...
-            template_2, folder_labels{folder_ind}, template_3);
+        %get the source folder for this case
+        if ~(diff_vals(folder_ind)==Inf)
+            source_folder = strcat(base_folder, '/', template_1, num2str(Pcc_to_plot), ...
+                template_2, folder_labels{folder_ind});
+        else
+            source_folder = strcat(ref_fit_1, num2str(Pcc_to_plot), ref_fit_2);
+        end
         
         
         %% initialise
@@ -122,7 +122,7 @@ for Pcc_ind = 1:length(Pcc_vals_to_plot)
         load(strcat(source_folder, '/peak_WMs'));
     
     
-        %% compute mean actual Pcc and peak from the simulations (across all sample sizes)
+        %% compute actual Pcc and peak
         for iter = 1:tot_iters
             load(strcat(source_folder, '/replicate_', num2str(iter), '/Pcc_estimates'));
             load(strcat(source_folder, '/replicate_', num2str(iter), '/peak_estimates'));
@@ -131,19 +131,16 @@ for Pcc_ind = 1:length(Pcc_vals_to_plot)
             actual_peak_estimates(iter) = mean(peak_estimates);
         end
     
-        actual_Pcc = actual_Pcc + mean(actual_Pcc_estimates)/length(sample_sizes);
-        actual_peak = actual_peak + mean(actual_peak_estimates)/length(sample_sizes);
+        actual_Pcc = mean(actual_Pcc_estimates);
+        actual_peak = mean(actual_peak_estimates);
     
     
-        %% loop replicates
+        %% extract data from replicates
         for iter = 1:num_iters_to_plot
-
-            %load data
             load(strcat(source_folder, '/replicate_', num2str(iter), '/final_Pcc_samples'));
             load(strcat(source_folder, '/replicate_', num2str(iter), '/final_peak_samples'));
             load(strcat(source_folder, '/replicate_', num2str(iter), '/curr_weights'));
         
-            %save into big array
             all_Pcc_estimates(:,iter)=final_Pcc_samples;
             all_peak_estimates(:,iter)=final_peak_samples;
             all_weights(:,iter)=curr_weights;
@@ -151,27 +148,31 @@ for Pcc_ind = 1:length(Pcc_vals_to_plot)
         
         
         
-        %% plot posterior violins and weighted mean boxplots
-
-        %positions of plots
+        %% plot posterior violins and median boxplots
+    
+        %plot positions
         vlns_pos = (folder_ind-1)*(num_iters_to_plot+1) + 1 + (1:num_iters_to_plot);
         box_pos_l = (folder_ind-1)*(num_iters_to_plot+1) + 1;
+
+
+
+        %Pcc
     
-        %Pcc figure
+        %get relevant figure
         figure((Pcc_ind-1)*2+1)
 
-        %plot weighted violins of all Pcc samples
+        %plot weighted violin
         weighted_violin(all_Pcc_estimates, 'weights', all_weights, 'x', vlns_pos, ...
             'facecolor', Pcc_interior_plot_colour, 'edgecolor', Pcc_plot_colour, 'mc', mean_colour, 'medc', []);
         
-        %plot boxplot of weighted means for this sample size 
+        %plot box plot
         boxplot(Pcc_WMs, 'positions', box_pos_l, 'colors', Pcc_plot_colour, 'widths', 0.7);
-
-        %adjust colours
         h=findobj(gca,'tag','Outliers');
         set(h, 'MarkerEdgeColor', Pcc_plot_colour)
 
-        %formatting
+        %plot true Pcc
+        plot([vlns_pos(1)-1.5, vlns_pos(end)+0.5], actual_Pcc*[1, 1], 'k');
+
         hold on
         legend off
     
@@ -182,25 +183,30 @@ for Pcc_ind = 1:length(Pcc_vals_to_plot)
             plot((vlns_pos(1)-1.5)*[1,1], [-0.3, 1.3], 'k', 'LineWidth',1.5);
         end
 
-        %annotation
-        text(vlns_pos(1)-1.2, 0.92*1.3, division_labels{folder_ind}, 'FontSize', plot_font_size);
+        %optionally add text labels
+        if Pcc_ind==1
+            text(vlns_pos(1)-1.2, 0.92*1.3, division_labels{folder_ind}, 'FontSize', 11);
+        end
         
 
-        %tpeak figure
-        figure((Pcc_ind-1)*2+2)
 
-        %plot weighted violins of all tpeak samples
+        %t_peak
+
+        %get relevant figure
+        figure((Pcc_ind-1)*2+2)
+        
+        %plot weighted violin
         weighted_violin(all_peak_estimates, 'weights', all_weights, 'x', vlns_pos, 'facecolor', peak_interior_plot_colour, ...
             'edgecolor', peak_plot_colour, 'mc', mean_colour, 'medc', []);
-
-        %plot boxplot of weighted means for this sample size
+        
+        %plot box plot
         boxplot(peak_WMs, 'positions', box_pos_l, 'colors', peak_plot_colour, 'widths', 0.7);
-
-        %adjust colours
         h=findobj(gca,'tag','Outliers');
         set(h, 'MarkerEdgeColor', peak_plot_colour)
 
-        %formatting
+        %plot true t_peak
+        plot([vlns_pos(1)-1.5, vlns_pos(end)+0.5], actual_peak*[1, 1], 'k');
+
         hold on
         legend off
     
@@ -211,51 +217,63 @@ for Pcc_ind = 1:length(Pcc_vals_to_plot)
             plot((vlns_pos(1)-1.5)*[1,1], [min(peak_prior_samples), max(peak_prior_samples)], 'k', 'LineWidth',1.5);
         end
 
-        %annotation
-        text(vlns_pos(1)-1.2, 0.92*max(peak_prior_samples), division_labels{folder_ind}, 'FontSize', plot_font_size)
-
+        %optionally put in text labels
+        if Pcc_ind==1
+            text(vlns_pos(1)-1.2, 0.92*max(peak_prior_samples), division_labels{folder_ind}, 'FontSize', 11)
+        end
+        
+    
     end
     
     
     %% formatting
     
-    %plot true Pcc value
+
+    %Pcc figure
+
     figure((Pcc_ind-1)*2+1)
-    plot([0.5, tot_num_obj+2], actual_Pcc*[1, 1], 'k');
     
-    %formatting
     hAxes = gca;
     hAxes.TickLabelInterpreter = 'latex';
     
     xticks(0:(tot_num_obj+1))
     xticklabels(plot_labels)
     xtickangle(60)
+    
 
+    if ~(Pcc_ind ==3)
+        xticks([]);
+    end
+    
     yticks(0:0.2:1)
 
     xlim([-0.5, tot_num_obj-0.5])
     ylim([-0.2, 1.3])
+    
+    
 
+
+    %t_peak figure
     
-    %plot true tpeak value
     figure((Pcc_ind-1)*2+2)
-    plot([0.5, tot_num_obj+2], actual_peak*[1,1], 'k');
     
-    %formatting
     hAxes = gca;
     hAxes.TickLabelInterpreter = 'latex';
     
     xticks(0:(tot_num_obj+1))
     xticklabels(plot_labels)
     xtickangle(45)
+    
+
+    if ~(Pcc_ind ==3)
+        xticks([]);
+    end
+
 
     xlim([-0.5, tot_num_obj-0.5])
     ylim([min(peak_prior_samples), max(peak_prior_samples)])
 
-
 end
-
-
 
 
 

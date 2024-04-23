@@ -1,6 +1,6 @@
 
 
-%Makes Figure 6 from the manuscript
+%Makes Figure 8 from the manuscript
 
 
 
